@@ -1,7 +1,7 @@
 """The canonical in-memory representation of one vector record."""
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -17,7 +17,7 @@ Metadata = dict[str, MetadataValue]
 
 def _utc_now() -> datetime:
     """Return a timezone-aware timestamp suitable for persisted records."""
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 @dataclass(slots=True)
@@ -119,4 +119,4 @@ class VectorRecord:
     def _validate_timestamp(timestamp: Any, field_name: str) -> datetime:
         if not isinstance(timestamp, datetime) or timestamp.tzinfo is None:
             raise ValidationError(f"{field_name} must be a timezone-aware datetime.")
-        return timestamp.astimezone(timezone.utc)
+        return timestamp.astimezone(UTC)

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import numpy as np
 import pytest
@@ -39,7 +39,7 @@ def test_record_checks_collection_dimension() -> None:
 
 
 def test_record_rejects_reversed_timestamps() -> None:
-    created = datetime.now(timezone.utc)
+    created = datetime.now(UTC)
     with pytest.raises(ValidationError, match="updated_at"):
         VectorRecord(
             id="lesson-1",

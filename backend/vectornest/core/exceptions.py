@@ -11,3 +11,7 @@ class ValidationError(VectorNestError):
 
 class DimensionMismatchError(ValidationError):
     """Raised when a vector does not match its collection's dimension."""
+
+
+class ZeroVectorError(ValidationError):
+    """Raised when cosine similarity receives a vector with zero magnitude."""
