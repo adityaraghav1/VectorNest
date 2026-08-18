@@ -10,8 +10,20 @@ class ValidationError(VectorNestError):
 
 
 class DimensionMismatchError(ValidationError):
-    """Raised when a vector does not match its collection's dimension."""
+    """Raised when a vector dimension does not match a collection."""
 
 
 class ZeroVectorError(ValidationError):
     """Raised when cosine similarity receives a vector with zero magnitude."""
+
+
+class CollectionNotFoundError(VectorNestError):
+    """Raised when a requested collection does not exist."""
+
+
+class DuplicateRecordError(VectorNestError):
+    """Raised when a record ID already exists in a collection."""
+
+
+class RecordNotFoundError(VectorNestError):
+    """Raised when a requested record does not exist."""

@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+
 import pytest
 
 from vectornest.core.exceptions import ValidationError
