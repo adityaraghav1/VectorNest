@@ -7,6 +7,7 @@ from vectornest.core.exceptions import (
 from vectornest.core.types import DistanceMetric
 from vectornest.models.collection import CollectionConfig
 from vectornest.models.record import VectorRecord
+from vectornest.query.filters import MetadataFilter
 from vectornest.services.search import SearchService
 from vectornest.storage.engine import InMemoryStorage
 
@@ -64,6 +65,80 @@ def test_search_returns_ranked_results() -> None:
         "middle",
         "worst",
     ]
+
+def test_search_applies_metadata_filter() -> None:
+    storage = make_storage()
+
+    storage.insert_record(
+        "documents",
+        VectorRecord(
+            id="resume",
+            vector=[1.0, 0.0],
+            metadata={
+                "source": "resume.pdf",
+            },
+        ),
+    )
+
+    storage.insert_record(
+        "documents",
+        VectorRecord(
+            id="notes",
+            vector=[1.0, 0.0],
+            metadata={
+                "source": "notes.pdf",
+            },
+        ),
+    )
+
+    service = SearchService(storage)
+
+    results = service.search(
+        "documents",
+        [1.0, 0.0],
+        metric=DistanceMetric.COSINE,
+        metadata_filter=MetadataFilter(
+            {
+                "source": "resume.pdf",
+            }
+        ),
+    )
+
+    assert [
+        result.record.id
+        for result in results
+    ] == ["resume"]
+
+
+def test_search_returns_empty_when_filter_matches_nothing() -> None:
+    storage = make_storage()
+
+    storage.insert_record(
+        "documents",
+        VectorRecord(
+            id="resume",
+            vector=[1.0, 0.0],
+            metadata={
+                "source": "resume.pdf",
+            },
+        ),
+    )
+
+    service = SearchService(storage)
+
+    results = service.search(
+        "documents",
+        [1.0, 0.0],
+        metric=DistanceMetric.COSINE,
+        metadata_filter=MetadataFilter(
+            {
+                "source": "missing.pdf",
+            }
+        ),
+    )
+
+    assert results == []
+
 
 
 def test_search_respects_k() -> None:
