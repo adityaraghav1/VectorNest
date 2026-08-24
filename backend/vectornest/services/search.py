@@ -5,13 +5,16 @@ from vectornest.core.types import DistanceMetric
 from vectornest.indexes.brute_force import BruteForceIndex
 from vectornest.indexes.results import SearchResult
 from vectornest.metrics.functions import VectorInput
-from vectornest.storage.engine import InMemoryStorage
+from vectornest.storage.base import StorageBackend
 
 
 class SearchService:
     """Coordinate stored collections with vector indexes."""
 
-    def __init__(self, storage: InMemoryStorage) -> None:
+    def __init__(
+        self,
+        storage: StorageBackend,
+    ) -> None:
         self.storage = storage
 
     def search(
@@ -22,10 +25,14 @@ class SearchService:
         k: int | None = None,
     ) -> list[SearchResult]:
         """Search a collection and return ranked matches."""
-        collection = self.storage.get_collection(collection_name)
+        collection = self.storage.get_collection(
+            collection_name
+        )
 
         if k is not None and k <= 0:
-            raise ValidationError("k must be greater than zero.")
+            raise ValidationError(
+                "k must be greater than zero."
+            )
 
         index = BruteForceIndex(
             dimension=collection.dimension,
@@ -33,10 +40,15 @@ class SearchService:
         )
 
         index.add_many(
-            self.storage.list_records(collection_name)
+            self.storage.list_records(
+                collection_name
+            )
         )
 
         if k is None:
             return index.search(query)
 
-        return index.search(query, limit=k)
+        return index.search(
+            query,
+            limit=k,
+        )
