@@ -17,3 +17,4 @@ class IndexType(StrEnum):
 
     BRUTE_FORCE = "brute_force"
     KD_TREE = "kd_tree"
+    HNSW = "hnsw"

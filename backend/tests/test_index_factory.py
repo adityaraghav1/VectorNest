@@ -4,6 +4,7 @@ from vectornest.core.exceptions import ValidationError
 from vectornest.core.types import DistanceMetric, IndexType
 from vectornest.indexes.brute_force import BruteForceIndex
 from vectornest.indexes.factory import create_index
+from vectornest.indexes.hnsw import HNSWIndex
 from vectornest.indexes.kd_tree import KDTreeIndex
 
 
@@ -17,6 +18,28 @@ def test_factory_creates_brute_force_index() -> None:
     assert isinstance(index, BruteForceIndex)
     assert index.dimension == 3
     assert index.metric is DistanceMetric.COSINE
+
+def test_factory_creates_hnsw_index() -> None:
+    index = create_index(
+        dimension=3,
+        metric=DistanceMetric.COSINE,
+        index_type=IndexType.HNSW,
+    )
+
+    assert isinstance(index, HNSWIndex)
+    assert index.dimension == 3
+    assert index.metric is DistanceMetric.COSINE
+
+
+def test_factory_creates_hnsw_with_euclidean_metric() -> None:
+    index = create_index(
+        dimension=3,
+        metric=DistanceMetric.EUCLIDEAN,
+        index_type=IndexType.HNSW,
+    )
+
+    assert isinstance(index, HNSWIndex)
+    assert index.metric is DistanceMetric.EUCLIDEAN
 
 
 def test_factory_creates_kd_tree_index() -> None:

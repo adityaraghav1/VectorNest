@@ -4,6 +4,7 @@ from vectornest.core.exceptions import ValidationError
 from vectornest.core.types import DistanceMetric, IndexType
 from vectornest.indexes.base import VectorIndex
 from vectornest.indexes.brute_force import BruteForceIndex
+from vectornest.indexes.hnsw import HNSWIndex
 from vectornest.indexes.kd_tree import KDTreeIndex
 
 
@@ -28,6 +29,12 @@ def create_index(
 
         return KDTreeIndex(
             dimension=dimension,
+        )
+
+    if index_type is IndexType.HNSW:
+        return HNSWIndex(
+            dimension=dimension,
+            metric=metric,
         )
 
     raise ValidationError(

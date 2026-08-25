@@ -154,6 +154,45 @@ def test_search_service_can_use_kd_tree() -> None:
         "far",
     ]
 
+def test_search_service_can_use_hnsw() -> None:
+    storage = make_storage()
+
+    storage.insert_record(
+        "documents",
+        make_record(
+            "best",
+            [1.0, 0.0],
+        ),
+    )
+
+    storage.insert_record(
+        "documents",
+        make_record(
+            "middle",
+            [0.8, 0.2],
+        ),
+    )
+
+    storage.insert_record(
+        "documents",
+        make_record(
+            "worst",
+            [0.0, 1.0],
+        ),
+    )
+
+    service = SearchService(storage)
+
+    results = service.search(
+        "documents",
+        [1.0, 0.0],
+        metric=DistanceMetric.COSINE,
+        index_type=IndexType.HNSW,
+        k=1,
+    )
+
+    assert len(results) == 1
+    assert results[0].record.id == "best"
 
 def test_search_service_rejects_incompatible_kd_tree_metric() -> None:
     storage = make_storage()
