@@ -4,7 +4,7 @@ from vectornest.core.exceptions import (
     CollectionNotFoundError,
     ValidationError,
 )
-from vectornest.core.types import DistanceMetric
+from vectornest.core.types import DistanceMetric, IndexType
 from vectornest.models.collection import CollectionConfig
 from vectornest.models.record import VectorRecord
 from vectornest.query.filters import MetadataFilter
@@ -109,6 +109,64 @@ def test_search_applies_metadata_filter() -> None:
         for result in results
     ] == ["resume"]
 
+def test_search_service_can_use_kd_tree() -> None:
+    storage = make_storage()
+
+    storage.insert_record(
+        "documents",
+        VectorRecord(
+            id="closest",
+            vector=[1.0, 1.0],
+        ),
+    )
+
+    storage.insert_record(
+        "documents",
+        VectorRecord(
+            id="middle",
+            vector=[4.0, 4.0],
+        ),
+    )
+
+    storage.insert_record(
+        "documents",
+        VectorRecord(
+            id="far",
+            vector=[10.0, 10.0],
+        ),
+    )
+
+    service = SearchService(storage)
+
+    results = service.search(
+        "documents",
+        [0.0, 0.0],
+        metric=DistanceMetric.EUCLIDEAN,
+        index_type=IndexType.KD_TREE,
+    )
+
+    assert [
+        result.record.id
+        for result in results
+    ] == [
+        "closest",
+        "middle",
+        "far",
+    ]
+
+
+def test_search_service_rejects_incompatible_kd_tree_metric() -> None:
+    storage = make_storage()
+
+    service = SearchService(storage)
+
+    with pytest.raises(ValidationError):
+        service.search(
+            "documents",
+            [1.0, 0.0],
+            metric=DistanceMetric.COSINE,
+            index_type=IndexType.KD_TREE,
+        )
 
 def test_search_returns_empty_when_filter_matches_nothing() -> None:
     storage = make_storage()
