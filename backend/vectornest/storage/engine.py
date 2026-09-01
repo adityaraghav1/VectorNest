@@ -2,6 +2,7 @@
 
 from vectornest.core.exceptions import (
     CollectionNotFoundError,
+    DuplicateCollectionError,
     DuplicateRecordError,
     RecordNotFoundError,
 )
@@ -19,7 +20,7 @@ class InMemoryStorage:
     def create_collection(self, collection: CollectionConfig) -> None:
         """Create a new empty collection."""
         if collection.name in self._collections:
-            raise ValueError(
+            raise DuplicateCollectionError(
                 f"Collection '{collection.name}' already exists."
             )
 

@@ -21,6 +21,10 @@ class CollectionNotFoundError(VectorNestError):
     """Raised when a requested collection does not exist."""
 
 
+class DuplicateCollectionError(VectorNestError):
+    """Raised when a collection name already exists."""
+
+
 class DuplicateRecordError(VectorNestError):
     """Raised when a record ID already exists in a collection."""
 
