@@ -8,12 +8,12 @@ from vectornest.api.routes import (
     health_router,
     records_router,
     search_router,
+    semantic_router,
 )
 
 
 def create_app() -> FastAPI:
     """Create and configure the VectorNest API application."""
-
     application = FastAPI(
         title="VectorNest",
         description=(
@@ -29,6 +29,7 @@ def create_app() -> FastAPI:
     application.include_router(collections_router)
     application.include_router(records_router)
     application.include_router(search_router)
+    application.include_router(semantic_router)
 
     return application
 
