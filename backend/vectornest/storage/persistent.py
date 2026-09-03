@@ -7,6 +7,7 @@ from typing import Any
 
 from vectornest.core.exceptions import (
     CollectionNotFoundError,
+    DuplicateCollectionError,
     DuplicateRecordError,
     RecordNotFoundError,
     ValidationError,
@@ -46,9 +47,9 @@ class PersistentStorage:
         collection_path = self._collection_path(collection.name)
 
         if collection_path.exists():
-            raise ValidationError(
-                f"Collection '{collection.name}' already exists."
-            )
+            raise DuplicateCollectionError(
+        f"Collection '{collection.name}' already exists."
+    )
 
         try:
             collection_path.mkdir(parents=True)

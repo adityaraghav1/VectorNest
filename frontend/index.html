@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+    <title>VectorNest</title>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-icon">
+                    VN
+                </div>
+
+                <div>
+                    <h1>VectorNest</h1>
+                    <p>Semantic Retrieval Engine</p>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button
+                    class="nav-item active"
+                    data-section="dashboard"
+                >
+                    Dashboard
+                </button>
+
+                <button
+                    class="nav-item"
+                    data-section="collections"
+                >
+                    Collections
+                </button>
+
+                <button
+                    class="nav-item"
+                    data-section="ingestion"
+                >
+                    Document Ingestion
+                </button>
+
+                <button
+                    class="nav-item"
+                    data-section="search"
+                >
+                    Semantic Search
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="status-dot"></div>
+                <span>VectorNest API</span>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">
+                     VECTOR SEARCH ENGINE
+                    </p>
+
+                    <h2 id="page-title">
+                        Dashboard
+                    </h2>
+                </div>
+
+                <div class="api-status">
+                    <span
+                        id="api-status-dot"
+                        class="api-status-dot"
+                    ></span>
+
+                    <span id="api-status-text">
+                        Checking API...
+                    </span>
+                </div>
+            </header>
+
+            <section
+                id="dashboard-section"
+                class="page-section active"
+            >
+                <div class="hero-card">
+                    <div>
+                        <p class="eyebrow">
+                            FROM TEXT TO VECTOR SEARCH
+                        </p>
+
+                        <h3>
+                               See how raw text becomes
+                               searchable meaning.
+                        </h3>
+
+                        <p class="hero-copy">
+                    Turn documents into chunks, chunks into vectors,
+                    and vectors into instant semantic results.
+                        </p>
+                    </div>
+<div class="vector-hero-visual">
+    <div class="vector-ring vector-ring-outer"></div>
+    <div class="vector-ring vector-ring-inner"></div>
+
+    <span class="vector-node node-1"></span>
+    <span class="vector-node node-2 active"></span>
+    <span class="vector-node node-3"></span>
+    <span class="vector-node node-4"></span>
+    <span class="vector-node node-5 active"></span>
+    <span class="vector-node node-6"></span>
+    <span class="vector-node node-7"></span>
+    <span class="vector-node node-8 active"></span>
+
+    <span class="vector-link link-1"></span>
+    <span class="vector-link link-2"></span>
+    <span class="vector-link link-3"></span>
+
+    <div class="vector-core">
+        <span>VN</span>
+    </div>
+
+    <span class="query-particle"></span>
+</div>
+
+                <div class="stats-grid">
+                    <article class="stat-card">
+                        <span class="stat-label">
+                            Search Engines
+                        </span>
+
+                        <strong>3</strong>
+
+                        <p>
+                            Brute Force, KD-Tree and HNSW
+                        </p>
+                    </article>
+
+                    <article class="stat-card">
+                        <span class="stat-label">
+                            Distance Metrics
+                        </span>
+
+                        <strong>4</strong>
+
+                        <p>
+                            Cosine, Euclidean, Dot and Manhattan
+                        </p>
+                    </article>
+
+                    <article class="stat-card">
+                        <span class="stat-label">
+                            Local AI
+                        </span>
+
+                        <strong>Ollama</strong>
+
+                        <p>
+                            Embeddings + RAG
+                        </p>
+                    </article>
+                </div>
+
+                <div class="pipeline-card">
+                    <h3>VectorNest Pipeline</h3>
+
+                    <div class="pipeline">
+                        <div class="pipeline-node">
+                            Text
+                        </div>
+
+                        <span>→</span>
+
+                        <div class="pipeline-node">
+                            Chunks
+                        </div>
+
+                        <span>→</span>
+
+                        <div class="pipeline-node">
+                            Embeddings
+                        </div>
+
+                        <span>→</span>
+
+                        <div class="pipeline-node">
+                            Index
+                        </div>
+
+                        <span>→</span>
+
+                        <div class="pipeline-node">
+                            Search
+                        </div>
+
+                        <span>→</span>
+
+                        <div class="pipeline-node">
+                            RAG
+                    </div>
+                </div>
+            </section>
+
+            <section
+                id="collections-section"
+                class="page-section"
+            >
+                <div class="panel">
+                    <h3>Create Collection</h3>
+
+                    <p class="panel-description">
+                        Define a vector collection before
+                        inserting records or documents.
+                    </p>
+
+                    <form id="collection-form">
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label for="collection-name">
+                                    Collection Name
+                                </label>
+
+                                <input
+                                    id="collection-name"
+                                    type="text"
+                                    placeholder="knowledge"
+                                    required
+                                >
+                            </div>
+
+                            <div class="form-field">
+                                <label for="collection-dimension">
+                                    Dimension
+                                </label>
+
+                                <input
+                                    id="collection-dimension"
+                                    type="number"
+                                    min="1"
+                                    value="768"
+                                    required
+                                >
+                            </div>
+
+                            <div class="form-field">
+                                <label for="collection-metric">
+                                    Distance Metric
+                                </label>
+
+                                <select id="collection-metric">
+                                    <option value="cosine">
+                                        Cosine
+                                    </option>
+
+                                    <option value="euclidean">
+                                        Euclidean
+                                    </option>
+
+                                    <option value="dot_product">
+                                        Dot Product
+                                    </option>
+
+                                    <option value="manhattan">
+                                        Manhattan
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            class="primary-button"
+                        >
+                            Create Collection
+                        </button>
+                    </form>
+
+                    <div
+                        id="collection-result"
+                        class="result-box"
+                    ></div>
+                </div>
+            </section>
+
+            <section
+    id="ingestion-section"
+    class="page-section"
+>
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">
+                TEXT → CHUNKS → EMBEDDINGS
+            </p>
+
+            <h3>Document Ingestion</h3>
+
+            <p class="panel-description">
+                Add raw text to a VectorNest collection.
+                The backend will chunk the document,
+                generate embeddings and store each chunk
+                as a vector record.
+            </p>
+        </div>
+    </div>
+
+    <div class="ingestion-layout">
+        <div class="panel">
+            <form id="ingestion-form">
+                <div class="form-field">
+                    <label for="ingestion-collection">
+                        Collection Name
+                    </label>
+
+                    <input
+                        id="ingestion-collection"
+                        type="text"
+                        placeholder="knowledge"
+                        required
+                    >
+                </div>
+
+                <div class="form-field form-spacing">
+                    <label for="document-id">
+                        Document ID
+                        <span class="optional-label">
+                            optional
+                        </span>
+                    </label>
+
+                    <input
+                        id="document-id"
+                        type="text"
+                        placeholder="python-guide"
+                    >
+                </div>
+
+                <div class="form-field form-spacing">
+                    <label for="document-content">
+                        Document Content
+                    </label>
+
+                    <textarea
+                        id="document-content"
+                        rows="12"
+                        placeholder="Paste your document here..."
+                        required
+                    ></textarea>
+
+                    <div class="textarea-info">
+                        <span id="word-count">
+                            0 words
+                        </span>
+
+                        <span>
+                            Automatically chunked by VectorNest
+                        </span>
+                    </div>
+                </div>
+
+                <div class="metadata-header">
+                    <div>
+                        <h4>Metadata</h4>
+
+                        <p>
+                            Optional key-value information
+                            attached to every generated chunk.
+                        </p>
+                    </div>
+
+                    <button
+                        id="add-metadata-button"
+                        type="button"
+                        class="secondary-button"
+                    >
+                        + Add Metadata
+                    </button>
+                </div>
+
+                <div id="metadata-container"></div>
+
+                <button
+                    id="ingest-button"
+                    type="submit"
+                    class="primary-button"
+                >
+                    Ingest Document
+                </button>
+            </form>
+        </div>
+
+        <aside class="ingestion-sidebar">
+            <div class="panel ingestion-status-card">
+                <p class="eyebrow">
+                    INGESTION PIPELINE
+                </p>
+
+                <div class="ingestion-pipeline">
+                    <div class="ingestion-step">
+                        <span>01</span>
+
+                        <div>
+                            <strong>Raw Text</strong>
+                            <p>
+                                Document received from the UI
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="pipeline-line"></div>
+
+                    <div class="ingestion-step">
+                        <span>02</span>
+
+                        <div>
+                            <strong>Chunking</strong>
+                            <p>
+                                Text split into overlapping chunks
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="pipeline-line"></div>
+
+                    <div class="ingestion-step">
+                        <span>03</span>
+
+                        <div>
+                            <strong>Embeddings</strong>
+                            <p>
+                                Each chunk becomes a vector
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="pipeline-line"></div>
+
+                    <div class="ingestion-step">
+                        <span>04</span>
+
+                        <div>
+                            <strong>Storage</strong>
+                            <p>
+                                VectorRecords saved in VectorNest
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div
+                id="ingestion-result"
+                class="panel ingestion-result-card"
+            >
+                <p class="empty-result">
+                    Ingestion results will appear here.
+                </p>
+            </div>
+        </aside>
+    </div>
+</section>
+
+<section
+    id="search-section"
+    class="page-section"
+>
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">
+                QUERY → EMBEDDING → VECTOR SEARCH
+            </p>
+
+            <h3>Semantic Search Lab</h3>
+
+            <p class="panel-description">
+                Search stored document chunks using natural-language
+                queries and compare different VectorNest indexes.
+            </p>
+        </div>
+    </div>
+
+    <div class="search-layout">
+        <div class="panel">
+            <form id="semantic-search-form">
+                <div class="form-field">
+                    <label for="search-collection">
+                        Collection Name
+                    </label>
+
+                    <input
+                        id="search-collection"
+                        type="text"
+                        placeholder="knowledge"
+                        value="knowledge"
+                        required
+                    >
+                </div>
+
+                <div class="form-field form-spacing">
+                    <label for="semantic-query">
+                        Search Query
+                    </label>
+
+                    <textarea
+                        id="semantic-query"
+                        rows="5"
+                        placeholder="What framework can I use to build Python APIs?"
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="search-controls-grid">
+                    <div class="form-field">
+                        <label for="search-index">
+                            Search Index
+                        </label>
+
+                        <select id="search-index">
+                            <option value="brute_force">
+                                Brute Force
+                            </option>
+
+                            <option value="kd_tree">
+                                KD-Tree
+                            </option>
+
+                            <option value="hnsw">
+                                HNSW
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="search-metric">
+                            Distance Metric
+                        </label>
+
+                        <select id="search-metric">
+                            <option value="cosine">
+                                Cosine
+                            </option>
+
+                            <option value="euclidean">
+                                Euclidean
+                            </option>
+
+                            <option value="dot_product">
+                                Dot Product
+                            </option>
+
+                            <option value="manhattan">
+                                Manhattan
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="search-k">
+                            Top-K
+                        </label>
+
+                        <input
+                            id="search-k"
+                            type="number"
+                            value="3"
+                            min="1"
+                            max="20"
+                        >
+                    </div>
+                </div>
+
+                <div class="metadata-header">
+                    <div>
+                        <h4>Metadata Filter</h4>
+
+                        <p>
+                            Optional exact-match filtering before search.
+                        </p>
+                    </div>
+
+                    <button
+                        id="add-search-filter-button"
+                        type="button"
+                        class="secondary-button"
+                    >
+                        + Add Filter
+                    </button>
+                </div>
+
+                <div id="search-filter-container"></div>
+
+                <button
+                    id="semantic-search-button"
+                    type="submit"
+                    class="primary-button"
+                >
+                    Run Semantic Search
+                </button>
+            </form>
+        </div>
+
+        <aside class="search-info-column">
+            <div class="panel">
+                <p class="eyebrow">
+                    SEARCH PIPELINE
+                </p>
+
+                <div class="ingestion-pipeline">
+                    <div class="ingestion-step">
+                        <span>01</span>
+
+                        <div>
+                            <strong>Query Text</strong>
+                            <p>
+                                Natural-language user input
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="pipeline-line"></div>
+
+                    <div class="ingestion-step">
+                        <span>02</span>
+
+                        <div>
+                            <strong>Query Embedding</strong>
+                            <p>
+                                Converted using nomic-embed-text
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="pipeline-line"></div>
+
+                    <div class="ingestion-step">
+                        <span>03</span>
+
+                        <div>
+                            <strong>Vector Search</strong>
+                            <p>
+                                Brute Force, KD-Tree or HNSW
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="pipeline-line"></div>
+
+                    <div class="ingestion-step">
+                        <span>04</span>
+
+                        <div>
+                            <strong>Ranked Results</strong>
+                            <p>
+                                Best matching chunks returned
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="vector-visualization-panel panel">
+    <div class="visualization-header">
+        <div>
+            <p class="eyebrow">
+                VECTOR SPACE
+            </p>
+
+            <h3>Embedding Projection</h3>
+
+            <p class="panel-description">
+                2D projection of the collection's
+                high-dimensional embedding vectors.
+            </p>
+        </div>
+
+        <div class="visualization-actions">
+            <span
+                id="vector-count"
+                class="vector-count"
+            >
+                0 vectors
+            </span>
+
+            <button
+                id="refresh-projection-button"
+                type="button"
+                class="secondary-button"
+            >
+                Refresh Plot
+            </button>
+        </div>
+    </div>
+
+    <div class="plot-container">
+        <canvas
+            id="vector-space-canvas"
+            width="1000"
+            height="500"
+        ></canvas>
+
+        <div
+            id="plot-empty-state"
+            class="plot-empty-state"
+        >
+            No vectors to visualize yet.
+        </div>
+
+        <div
+            id="vector-tooltip"
+            class="vector-tooltip"
+        ></div>
+    </div>
+
+<div class="plot-legend">
+    <div>
+        <span
+            class="legend-dot document-dot"
+        ></span>
+        Document chunk
+    </div>
+
+    <div>
+        <span
+            class="legend-dot match-dot"
+        ></span>
+        Search match
+    </div>
+
+    <div>
+        <span
+            class="legend-dot query-dot"
+        ></span>
+        Query
+    </div>
+</div>
+
+    <div
+        id="semantic-search-results"
+        class="search-results-section"
+    >
+        <div class="panel">
+            <p class="empty-result">
+                Search results will appear here.
+            </p>
+        </div>
+    </div>
+
+<div class="rag-panel panel">
+    <div class="rag-header">
+        <div>
+            <p class="eyebrow">
+                RETRIEVAL-AUGMENTED GENERATION
+            </p>
+
+            <h3>Ask VectorNest</h3>
+
+            <p class="panel-description">
+                Ask questions about your ingested documents.
+                VectorNest retrieves relevant chunks first,
+                then Ollama generates a grounded answer.
+            </p>
+        </div>
+
+        <div class="rag-badge">
+            Local RAG
+        </div>
+    </div>
+
+    <div class="rag-layout">
+        <div class="rag-chat-area">
+<div
+    id="rag-messages"
+    class="rag-messages"
+>
+    <div class="rag-message assistant-message">
+        <div class="rag-avatar">
+            VN
+        </div>
+
+        <div class="rag-message-content">
+            Ask me anything about the documents
+            stored in your VectorNest collection.
+        </div>
+    </div>
+</div>
+
+            <form id="rag-form">
+                <div class="rag-input-row">
+                    <textarea
+                        id="rag-question"
+                        rows="3"
+                        placeholder="How is Python used for machine learning?"
+                        required
+                    ></textarea>
+
+                    <button
+                        id="rag-submit-button"
+                        type="submit"
+                        class="primary-button rag-submit-button"
+                    >
+                        Ask
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <aside class="rag-controls">
+            <div class="form-field">
+                <label for="rag-collection">
+                    Collection
+                </label>
+
+                <input
+                    id="rag-collection"
+                    type="text"
+                    value="knowledge"
+                    placeholder="knowledge"
+                    required
+                >
+            </div>
+
+            <div class="form-field form-spacing">
+                <label for="rag-index">
+                    Search Index
+                </label>
+
+                <select id="rag-index">
+                    <option value="brute_force">
+                        Brute Force
+                    </option>
+
+                    <option value="kd_tree">
+                        KD-Tree
+                    </option>
+
+                    <option value="hnsw">
+                        HNSW
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-field form-spacing">
+                <label for="rag-metric">
+                    Distance Metric
+                </label>
+
+                <select id="rag-metric">
+                    <option value="cosine">
+                        Cosine
+                    </option>
+
+                    <option value="euclidean">
+                        Euclidean
+                    </option>
+
+                    <option value="dot_product">
+                        Dot Product
+                    </option>
+
+                    <option value="manhattan">
+                        Manhattan
+                    </option>
+                </select>
+            </div>
+
+            <div class="form-field form-spacing">
+                <label for="rag-k">
+                    Retrieved Chunks
+                </label>
+
+                <input
+                    id="rag-k"
+                    type="number"
+                    value="4"
+                    min="1"
+                    max="10"
+                >
+            </div>
+
+            <div class="rag-info-box">
+                <strong>How it works</strong>
+
+                <p>
+                    Query → Embedding → Vector Search →
+                    Retrieved Context → Ollama → Answer
+                </p>
+            </div>
+
+            <div
+                id="rag-status"
+                class="rag-status"
+            >
+                Ready
+            </div>
+        </aside>
+    </div>
+
+    <div class="rag-sources-section">
+        <div class="rag-sources-header">
+            <div>
+                <p class="eyebrow">
+                    RETRIEVED CONTEXT
+                </p>
+
+                <h4>Sources</h4>
+            </div>
+
+            <span id="rag-source-count">
+                0 sources
+            </span>
+        </div>
+
+        <div
+            id="rag-sources"
+            class="rag-sources"
+        >
+            <p class="empty-result">
+                Retrieved document chunks will appear here.
+            </p>
+        </div>
+    </div>
+</div>    
+
+
+</section>
+
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

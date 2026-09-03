@@ -9,8 +9,6 @@ from vectornest.embeddings.base import EmbeddingProvider
 
 
 class OllamaEmbeddingProvider(EmbeddingProvider):
-    """Generate embeddings using a local Ollama server."""
-
     def __init__(
         self,
         client: Any,
@@ -33,29 +31,24 @@ class OllamaEmbeddingProvider(EmbeddingProvider):
 
     @property
     def dimension(self) -> int:
-        """Return the embedding dimension."""
         return self._dimension
 
     def embed_text(self, text: str) -> np.ndarray:
-        """Generate one embedding using Ollama."""
         normalized_text = self.validate_text(text)
 
-        response = self._client.embeddings(
+        response = self._client.embed(
             model=self._model,
-            prompt=normalized_text,
+            input=normalized_text,
         )
 
-        if not isinstance(response, dict):
+        embeddings = response.get("embeddings")
+
+        if not embeddings:
             raise ValidationError(
-                "Ollama returned an invalid embedding response."
+                "Ollama response does not contain embeddings."
             )
 
-        embedding = response.get("embedding")
-
-        if embedding is None:
-            raise ValidationError(
-                "Ollama response does not contain an embedding."
-            )
+        embedding = embeddings[0]
 
         return self.normalize_embedding(
             np.asarray(embedding),

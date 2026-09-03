@@ -8,7 +8,10 @@ version = "0.1.0"
 description = "A production-inspired vector database built from scratch."
 readme = {text = "VectorNest is a production-inspired vector database built from scratch in Python.", content-type = "text/markdown"}
 requires-python = ">=3.11"
-dependencies = ["numpy>=1.26,<3"]
+dependencies = [
+    "numpy>=1.26,<3",
+    "ollama",
+]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0,<9", "ruff>=0.8,<1"]
