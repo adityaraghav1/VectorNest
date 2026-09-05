@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from vectornest.core.exceptions import (
@@ -5,6 +7,7 @@ from vectornest.core.exceptions import (
     DimensionMismatchError,
     DuplicateRecordError,
     RecordNotFoundError,
+    ValidationError,
 )
 from vectornest.models.collection import CollectionConfig
 from vectornest.models.record import VectorRecord
@@ -32,7 +35,7 @@ def make_record(
 
 
 def test_collection_survives_storage_restart(
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     storage = PersistentStorage(tmp_path)
 
@@ -51,7 +54,7 @@ def test_collection_survives_storage_restart(
 
 
 def test_record_survives_storage_restart(
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     storage = PersistentStorage(tmp_path)
 
@@ -78,7 +81,7 @@ def test_record_survives_storage_restart(
 
 
 def test_persistent_storage_count(
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     storage = PersistentStorage(tmp_path)
 
@@ -100,7 +103,7 @@ def test_persistent_storage_count(
 
 
 def test_persistent_storage_rejects_duplicate_record(
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     storage = PersistentStorage(tmp_path)
 
@@ -121,7 +124,7 @@ def test_persistent_storage_rejects_duplicate_record(
 
 
 def test_persistent_storage_rejects_dimension_mismatch(
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     storage = PersistentStorage(tmp_path)
 
@@ -140,7 +143,7 @@ def test_persistent_storage_rejects_dimension_mismatch(
 
 
 def test_persistent_storage_updates_record(
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     storage = PersistentStorage(tmp_path)
 
@@ -174,7 +177,7 @@ def test_persistent_storage_updates_record(
 
 
 def test_persistent_storage_deletes_record(
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     storage = PersistentStorage(tmp_path)
 
@@ -200,7 +203,7 @@ def test_persistent_storage_deletes_record(
 
 
 def test_persistent_storage_lists_records(
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     storage = PersistentStorage(tmp_path)
 
@@ -229,7 +232,7 @@ def test_persistent_storage_lists_records(
 
 
 def test_delete_collection_removes_persisted_data(
-    tmp_path,
+    tmp_path: Path,
 ) -> None:
     storage = PersistentStorage(tmp_path)
 
@@ -252,3 +255,32 @@ def test_delete_collection_removes_persisted_data(
         restarted.get_collection(
             "documents"
         )
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "../secret",
+        "..\\secret",
+        "folder/collection",
+        "folder\\collection",
+        ".",
+        "..",
+    ],
+)
+def test_persistent_storage_rejects_unsafe_collection_names(
+    tmp_path: Path,
+    name: str,
+) -> None:
+    storage = PersistentStorage(
+        root_path=tmp_path,
+    )
+
+    with pytest.raises(
+        ValidationError,
+        match=(
+            "Collection name may contain only letters, "
+            "digits, hyphens, and underscores."
+        ),
+    ):
+        storage.get_collection(name)

@@ -4,7 +4,10 @@ from typing import Any
 
 import numpy as np
 
-from vectornest.core.exceptions import ValidationError
+from vectornest.core.exceptions import (
+    ExternalServiceError,
+    ValidationError,
+)
 from vectornest.embeddings.base import EmbeddingProvider
 
 
@@ -33,19 +36,31 @@ class OllamaEmbeddingProvider(EmbeddingProvider):
     def dimension(self) -> int:
         return self._dimension
 
-    def embed_text(self, text: str) -> np.ndarray:
-        normalized_text = self.validate_text(text)
-
-        response = self._client.embed(
-            model=self._model,
-            input=normalized_text,
+    def embed_text(
+        self,
+        text: str,
+    ) -> np.ndarray:
+        normalized_text = self.validate_text(
+            text
         )
 
-        embeddings = response.get("embeddings")
+        try:
+            response = self._client.embed(
+                model=self._model,
+                input=normalized_text,
+            )
+        except Exception as exc:
+            raise ExternalServiceError(
+                "Failed to generate embedding using Ollama."
+            ) from exc
+
+        embeddings = response.get(
+            "embeddings"
+        )
 
         if not embeddings:
-            raise ValidationError(
-                "Ollama response does not contain embeddings."
+            raise ExternalServiceError(
+                "Ollama returned an invalid embedding response."
             )
 
         embedding = embeddings[0]

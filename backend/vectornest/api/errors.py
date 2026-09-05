@@ -7,6 +7,7 @@ from vectornest.core.exceptions import (
     CollectionNotFoundError,
     DuplicateCollectionError,
     DuplicateRecordError,
+    ExternalServiceError,
     RecordNotFoundError,
     ValidationError,
 )
@@ -20,7 +21,9 @@ async def not_found_handler(
 
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
-        content={"detail": str(exc)},
+        content={
+            "detail": str(exc),
+        },
     )
 
 
@@ -32,7 +35,9 @@ async def conflict_handler(
 
     return JSONResponse(
         status_code=status.HTTP_409_CONFLICT,
-        content={"detail": str(exc)},
+        content={
+            "detail": str(exc),
+        },
     )
 
 
@@ -44,7 +49,23 @@ async def validation_handler(
 
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-        content={"detail": str(exc)},
+        content={
+            "detail": str(exc),
+        },
+    )
+
+
+async def external_service_handler(
+    _request: Request,
+    exc: Exception,
+) -> JSONResponse:
+    """Convert external dependency failures into HTTP 503."""
+
+    return JSONResponse(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        content={
+            "detail": str(exc),
+        },
     )
 
 
@@ -57,6 +78,7 @@ def register_exception_handlers(
         CollectionNotFoundError,
         not_found_handler,
     )
+
     application.add_exception_handler(
         RecordNotFoundError,
         not_found_handler,
@@ -66,6 +88,7 @@ def register_exception_handlers(
         DuplicateCollectionError,
         conflict_handler,
     )
+
     application.add_exception_handler(
         DuplicateRecordError,
         conflict_handler,
@@ -74,4 +97,9 @@ def register_exception_handlers(
     application.add_exception_handler(
         ValidationError,
         validation_handler,
+    )
+
+    application.add_exception_handler(
+        ExternalServiceError,
+        external_service_handler,
     )

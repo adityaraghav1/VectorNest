@@ -1,7 +1,10 @@
 import numpy as np
 import pytest
 
-from vectornest.core.exceptions import ValidationError
+from vectornest.core.exceptions import (
+    ExternalServiceError,
+    ValidationError,
+)
 from vectornest.embeddings.ollama import OllamaEmbeddingProvider
 
 
@@ -113,7 +116,6 @@ def test_ollama_provider_rejects_invalid_dimension() -> None:
             dimension=0,
         )
 
-
 def test_ollama_provider_rejects_missing_embeddings() -> None:
     client = FakeOllamaClient(
         {
@@ -128,8 +130,8 @@ def test_ollama_provider_rejects_missing_embeddings() -> None:
     )
 
     with pytest.raises(
-        ValidationError,
-        match="does not contain embeddings",
+        ExternalServiceError,
+        match="invalid embedding response",
     ):
         provider.embed_text("hello")
 
@@ -148,11 +150,35 @@ def test_ollama_provider_rejects_empty_embeddings() -> None:
     )
 
     with pytest.raises(
-        ValidationError,
-        match="does not contain embeddings",
+        ExternalServiceError,
+        match="invalid embedding response",
     ):
         provider.embed_text("hello")
 
+class FailingOllamaClient:
+    def embed(
+        self,
+        *,
+        model: str,
+        input: str,
+    ) -> dict:
+        raise ConnectionError(
+            "Ollama is unavailable."
+        )
+
+
+def test_ollama_provider_wraps_client_failure() -> None:
+    provider = OllamaEmbeddingProvider(
+        client=FailingOllamaClient(),
+        model="test-model",
+        dimension=3,
+    )
+
+    with pytest.raises(
+        ExternalServiceError,
+        match="Failed to generate embedding using Ollama",
+    ):
+        provider.embed_text("hello")
 
 def test_ollama_provider_rejects_wrong_embedding_dimension() -> None:
     client = FakeOllamaClient(
@@ -177,3 +203,5 @@ def test_ollama_provider_rejects_wrong_embedding_dimension() -> None:
         match="dimension",
     ):
         provider.embed_text("hello")
+
+        

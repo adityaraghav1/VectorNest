@@ -12,7 +12,10 @@ from vectornest.core.exceptions import (
     RecordNotFoundError,
     ValidationError,
 )
-from vectornest.models.collection import CollectionConfig
+from vectornest.models.collection import (
+    MAX_COLLECTION_NAME_LENGTH,
+    CollectionConfig,
+)
 from vectornest.models.record import VectorRecord
 from vectornest.storage.serialization import (
     deserialize_collection,
@@ -44,15 +47,20 @@ class PersistentStorage:
         collection: CollectionConfig,
     ) -> None:
         """Create and persist an empty collection."""
-        collection_path = self._collection_path(collection.name)
+
+        collection_path = self._collection_path(
+            collection.name
+        )
 
         if collection_path.exists():
             raise DuplicateCollectionError(
-        f"Collection '{collection.name}' already exists."
-    )
+                f"Collection '{collection.name}' already exists."
+            )
 
         try:
-            collection_path.mkdir(parents=True)
+            collection_path.mkdir(
+                parents=True
+            )
         except OSError as error:
             raise ValidationError(
                 f"Unable to create collection '{collection.name}'."
@@ -73,6 +81,7 @@ class PersistentStorage:
         name: str,
     ) -> CollectionConfig:
         """Load a collection configuration from disk."""
+
         collection_file = (
             self._collection_path(name)
             / "collection.json"
@@ -83,21 +92,31 @@ class PersistentStorage:
                 f"Collection '{name}' does not exist."
             )
 
-        data = self._read_json(collection_file)
+        data = self._read_json(
+            collection_file
+        )
 
-        if not isinstance(data, dict):
+        if not isinstance(
+            data,
+            dict,
+        ):
             raise ValidationError(
                 f"Collection '{name}' contains invalid persisted data."
             )
 
-        return deserialize_collection(data)
+        return deserialize_collection(
+            data
+        )
 
     def delete_collection(
         self,
         name: str,
     ) -> None:
         """Delete a collection and every record inside it."""
-        collection_path = self._collection_path(name)
+
+        collection_path = (
+            self._collection_path(name)
+        )
 
         if not collection_path.exists():
             raise CollectionNotFoundError(
@@ -105,7 +124,9 @@ class PersistentStorage:
             )
 
         try:
-            shutil.rmtree(collection_path)
+            shutil.rmtree(
+                collection_path
+            )
         except OSError as error:
             raise ValidationError(
                 f"Unable to delete collection '{name}'."
@@ -117,11 +138,18 @@ class PersistentStorage:
         record: VectorRecord,
     ) -> None:
         """Insert and persist one vector record."""
-        collection = self.get_collection(collection_name)
 
-        record.ensure_dimension(collection.dimension)
+        collection = self.get_collection(
+            collection_name
+        )
 
-        records = self._load_record_data(collection_name)
+        record.ensure_dimension(
+            collection.dimension
+        )
+
+        records = self._load_record_data(
+            collection_name
+        )
 
         if record.id in records:
             raise DuplicateRecordError(
@@ -129,7 +157,11 @@ class PersistentStorage:
                 f"in collection '{collection_name}'."
             )
 
-        records[record.id] = serialize_record(record)
+        records[
+            record.id
+        ] = serialize_record(
+            record
+        )
 
         self._save_record_data(
             collection_name,
@@ -142,9 +174,14 @@ class PersistentStorage:
         record_id: str,
     ) -> VectorRecord:
         """Load one record by ID."""
-        self.get_collection(collection_name)
 
-        records = self._load_record_data(collection_name)
+        self.get_collection(
+            collection_name
+        )
+
+        records = self._load_record_data(
+            collection_name
+        )
 
         if record_id not in records:
             raise RecordNotFoundError(
@@ -152,14 +189,21 @@ class PersistentStorage:
                 f"in collection '{collection_name}'."
             )
 
-        data = records[record_id]
+        data = records[
+            record_id
+        ]
 
-        if not isinstance(data, dict):
+        if not isinstance(
+            data,
+            dict,
+        ):
             raise ValidationError(
                 f"Record '{record_id}' contains invalid persisted data."
             )
 
-        return deserialize_record(data)
+        return deserialize_record(
+            data
+        )
 
     def update_record(
         self,
@@ -167,11 +211,18 @@ class PersistentStorage:
         record: VectorRecord,
     ) -> None:
         """Replace an existing persisted record."""
-        collection = self.get_collection(collection_name)
 
-        record.ensure_dimension(collection.dimension)
+        collection = self.get_collection(
+            collection_name
+        )
 
-        records = self._load_record_data(collection_name)
+        record.ensure_dimension(
+            collection.dimension
+        )
+
+        records = self._load_record_data(
+            collection_name
+        )
 
         if record.id not in records:
             raise RecordNotFoundError(
@@ -179,7 +230,11 @@ class PersistentStorage:
                 f"in collection '{collection_name}'."
             )
 
-        records[record.id] = serialize_record(record)
+        records[
+            record.id
+        ] = serialize_record(
+            record
+        )
 
         self._save_record_data(
             collection_name,
@@ -192,9 +247,14 @@ class PersistentStorage:
         record_id: str,
     ) -> None:
         """Delete one persisted record."""
-        self.get_collection(collection_name)
 
-        records = self._load_record_data(collection_name)
+        self.get_collection(
+            collection_name
+        )
+
+        records = self._load_record_data(
+            collection_name
+        )
 
         if record_id not in records:
             raise RecordNotFoundError(
@@ -202,7 +262,9 @@ class PersistentStorage:
                 f"in collection '{collection_name}'."
             )
 
-        del records[record_id]
+        del records[
+            record_id
+        ]
 
         self._save_record_data(
             collection_name,
@@ -214,20 +276,32 @@ class PersistentStorage:
         collection_name: str,
     ) -> list[VectorRecord]:
         """Load every record from a collection."""
-        self.get_collection(collection_name)
 
-        records = self._load_record_data(collection_name)
+        self.get_collection(
+            collection_name
+        )
 
-        result: list[VectorRecord] = []
+        records = self._load_record_data(
+            collection_name
+        )
+
+        result: list[
+            VectorRecord
+        ] = []
 
         for data in records.values():
-            if not isinstance(data, dict):
+            if not isinstance(
+                data,
+                dict,
+            ):
                 raise ValidationError(
                     "Persisted record data must be a dictionary."
                 )
 
             result.append(
-                deserialize_record(data)
+                deserialize_record(
+                    data
+                )
             )
 
         return result
@@ -237,24 +311,73 @@ class PersistentStorage:
         collection_name: str,
     ) -> int:
         """Return the number of persisted records."""
-        self.get_collection(collection_name)
+
+        self.get_collection(
+            collection_name
+        )
 
         return len(
-            self._load_record_data(collection_name)
+            self._load_record_data(
+                collection_name
+            )
         )
 
     def _collection_path(
         self,
         name: str,
     ) -> Path:
-        return self.collections_path / name
+        """Return a safe collection directory path."""
+
+        if not isinstance(
+            name,
+            str,
+        ):
+            raise ValidationError(
+                "Collection name must be a string."
+            )
+
+        normalized_name = (
+            name.strip()
+        )
+
+        if not normalized_name:
+            raise ValidationError(
+                "Collection name cannot be empty."
+            )
+
+        if (
+            len(normalized_name)
+            > MAX_COLLECTION_NAME_LENGTH
+        ):
+            raise ValidationError(
+                "Collection name cannot exceed "
+                f"{MAX_COLLECTION_NAME_LENGTH} characters."
+            )
+
+        if not (
+            normalized_name
+            .replace("_", "")
+            .replace("-", "")
+            .isalnum()
+        ):
+            raise ValidationError(
+                "Collection name may contain only letters, "
+                "digits, hyphens, and underscores."
+            )
+
+        return (
+            self.collections_path
+            / normalized_name
+        )
 
     def _records_path(
         self,
         collection_name: str,
     ) -> Path:
         return (
-            self._collection_path(collection_name)
+            self._collection_path(
+                collection_name
+            )
             / "records.json"
         )
 
@@ -262,16 +385,25 @@ class PersistentStorage:
         self,
         collection_name: str,
     ) -> dict[str, Any]:
-        records_file = self._records_path(collection_name)
+        records_file = (
+            self._records_path(
+                collection_name
+            )
+        )
 
         if not records_file.exists():
             raise CollectionNotFoundError(
                 f"Collection '{collection_name}' does not exist."
             )
 
-        data = self._read_json(records_file)
+        data = self._read_json(
+            records_file
+        )
 
-        if not isinstance(data, dict):
+        if not isinstance(
+            data,
+            dict,
+        ):
             raise ValidationError(
                 "Persisted records must be stored as a dictionary."
             )
@@ -284,7 +416,9 @@ class PersistentStorage:
         records: dict[str, Any],
     ) -> None:
         self._write_json(
-            self._records_path(collection_name),
+            self._records_path(
+                collection_name
+            ),
             records,
         )
 
@@ -297,7 +431,10 @@ class PersistentStorage:
                 "r",
                 encoding="utf-8",
             ) as file:
-                return json.load(file)
+                return json.load(
+                    file
+                )
+
         except (
             OSError,
             json.JSONDecodeError,
@@ -311,8 +448,10 @@ class PersistentStorage:
         path: Path,
         data: Any,
     ) -> None:
-        temporary_path = path.with_suffix(
-            path.suffix + ".tmp"
+        temporary_path = (
+            path.with_suffix(
+                path.suffix + ".tmp"
+            )
         )
 
         try:
@@ -326,7 +465,9 @@ class PersistentStorage:
                     indent=2,
                 )
 
-            temporary_path.replace(path)
+            temporary_path.replace(
+                path
+            )
 
         except OSError as error:
             temporary_path.unlink(

@@ -31,3 +31,7 @@ class DuplicateRecordError(VectorNestError):
 
 class RecordNotFoundError(VectorNestError):
     """Raised when a requested record does not exist."""
+
+
+class ExternalServiceError(VectorNestError):
+    """Raised when an external dependency is unavailable or fails."""

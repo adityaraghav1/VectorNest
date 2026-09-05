@@ -4,7 +4,10 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any
 
-from vectornest.core.exceptions import ValidationError
+from vectornest.core.exceptions import (
+    ExternalServiceError,
+    ValidationError,
+)
 from vectornest.core.types import DistanceMetric, IndexType
 from vectornest.query.filters import MetadataFilter
 from vectornest.services.semantic_search import SemanticSearchService
@@ -46,7 +49,6 @@ class RAGService:
         self._semantic_search_service = (
             semantic_search_service
         )
-
         self._llm_client = llm_client
         self._model = model.strip()
         self._minimum_score = minimum_score
@@ -61,6 +63,8 @@ class RAGService:
         metadata_filter: MetadataFilter | None = None,
         index_type: IndexType = IndexType.BRUTE_FORCE,
     ) -> RAGResponse:
+        """Generate a grounded answer from retrieved context."""
+
         normalized_question = (
             self._validate_question(
                 question
@@ -90,15 +94,20 @@ class RAGService:
             sources,
         )
 
-        response = self._llm_client.chat(
-            model=self._model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-        )
+        try:
+            response = self._llm_client.chat(
+                model=self._model,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+            )
+        except Exception as exc:
+            raise ExternalServiceError(
+                "Failed to generate answer using Ollama."
+            ) from exc
 
         answer = self._extract_answer(
             response
@@ -157,16 +166,21 @@ class RAGService:
             sources,
         )
 
-        response = self._llm_client.chat(
-            model=self._model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt,
-                }
-            ],
-            stream=True,
-        )
+        try:
+            response = self._llm_client.chat(
+                model=self._model,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+                stream=True,
+            )
+        except Exception as exc:
+            raise ExternalServiceError(
+                "Failed to stream answer using Ollama."
+            ) from exc
 
         return (
             sources,
@@ -196,25 +210,28 @@ class RAGService:
             )
         )
 
-        return [
-            RAGSource(
-                id=result.record.id,
-                document=(
-                    result.record.document
-                    or ""
-                ),
-                score=result.score,
-                metadata=(
-                    result.record.metadata
-                ),
-            )
-            for result in search_results
+        sources: list[RAGSource] = []
+
+        for result in search_results:
+            if not result.record.document:
+                continue
+
             if (
-                result.record.document
-                and result.score
-                >= self._minimum_score
+                metric == DistanceMetric.COSINE
+                and result.score < self._minimum_score
+            ):
+                continue
+
+            sources.append(
+                RAGSource(
+                    id=result.record.id,
+                    document=result.record.document,
+                    score=result.score,
+                    metadata=result.record.metadata,
+                )
             )
-        ]
+
+        return sources
 
     def _create_rag_prompt(
         self,
@@ -405,7 +422,7 @@ class RAGService:
             if answer:
                 return answer
 
-        raise ValidationError(
+        raise ExternalServiceError(
             "Ollama response does not contain "
             "a generated answer."
         )

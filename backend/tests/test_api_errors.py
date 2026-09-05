@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 
 from vectornest.api.app import create_app
 from vectornest.api.dependencies import get_storage
+from vectornest.core.exceptions import ExternalServiceError
 from vectornest.models.collection import CollectionConfig
 from vectornest.models.record import VectorRecord
 from vectornest.storage.engine import InMemoryStorage
@@ -56,6 +57,27 @@ def test_missing_collection_returns_404(
     assert response.status_code == 404
     assert response.json() == {
         "detail": "Collection 'missing' does not exist."
+    }
+
+def test_external_service_error_returns_503() -> None:
+    application = create_app()
+
+    @application.get("/test-external-service-error")
+    def raise_external_service_error() -> None:
+        raise ExternalServiceError(
+            "Ollama is unavailable."
+        )
+
+    client = TestClient(application)
+
+    response = client.get(
+        "/test-external-service-error"
+    )
+
+    assert response.status_code == 503
+
+    assert response.json() == {
+        "detail": "Ollama is unavailable.",
     }
 
 
