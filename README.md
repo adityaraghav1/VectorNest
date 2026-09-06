@@ -1,14 +1,19 @@
 # VectorNest
 
-> A vector database built from scratch in Python, featuring custom nearest-neighbor indexes, persistent storage, semantic search, benchmarking, and local RAG.
+> A vector database built from scratch in Python, featuring custom nearest-neighbor indexes, persistent storage, semantic search, benchmarking, and RAG.
 
 VectorNest is an educational, production-inspired vector database built to explore the internals of modern vector search systems.
 
 Rather than relying on FAISS, Chroma, Pinecone, Weaviate, Qdrant, or another vector database for its core search engine, VectorNest implements vector storage, similarity metrics, metadata filtering, indexing, retrieval, and benchmarking itself.
 
-It exposes these capabilities through a FastAPI REST API and an interactive web interface, with local embeddings and LLM inference powered by Ollama.
+It exposes these capabilities through a FastAPI REST API and an interactive web interface. Ollama is supported for fully local embeddings and generation, while Gemini can be used as an optional cloud AI provider for the deployed semantic-search and RAG demo.
 
----
+## Live Demo
+
+- **Web App:** https://vectornest.onrender.com
+- **API Documentation:** https://vectornest-backend.onrender.com/docs
+
+> The public demo runs on Render's free tier. Backend storage is therefore ephemeral and collections may be reset after service restarts or redeployments. Local and Docker deployments use VectorNest's persistent storage layer.
 
 ## Why VectorNest?
 
@@ -66,22 +71,32 @@ Indexes are implemented as part of VectorNest rather than delegated to an extern
 VectorNest can:
 
 1. Split documents into overlapping text chunks
-2. Generate embeddings using Ollama
+2. Generate embeddings through a configurable embedding provider
 3. Store vectors together with text and metadata
 4. Embed natural-language queries
-5. Retrieve semantically similar chunks
+5. Retrieve semantically similar chunks using VectorNest's own indexes
 
-The default embedding model is `nomic-embed-text`.
+Supported embedding providers:
+
+- **Ollama** — local inference with `nomic-embed-text`
+- **Gemini** — optional cloud inference using `gemini-embedding-2`
+
+The default local configuration uses Ollama. The public deployment uses Gemini so that semantic search can run without depending on an Ollama instance on the user's machine.
 
 ### Retrieval-Augmented Generation
 
-VectorNest includes a local RAG pipeline:
+VectorNest includes a RAG pipeline:
 
-`Question → Embedding → Vector Search → Retrieved Context → LLM → Answer`
+`Question → Embedding → VectorNest Search → Retrieved Context → LLM → Answer`
 
-Generation is powered by Ollama using `llama3.2`.
+Generation is provider-independent and currently supports:
+
+- **Ollama** with `llama3.2` for fully local generation
+- **Gemini** with `gemini-3.7-flash` for optional cloud generation
 
 Both normal and streaming RAG responses are supported.
+
+The external AI provider is used only for embedding and text generation. Vector storage, similarity computation, metadata filtering, indexing, and nearest-neighbor retrieval remain part of VectorNest itself.
 
 ### Benchmarking
 
@@ -131,18 +146,52 @@ The Dockerized backend can communicate with a locally running Ollama instance fo
 | Numerical Computing | NumPy |
 | Backend API | FastAPI |
 | ASGI Server | Uvicorn |
-| Embeddings | Ollama + `nomic-embed-text` |
-| LLM | Ollama + `llama3.2` |
+| Embeddings | Ollama (`nomic-embed-text`) / Gemini (`gemini-embedding-2`) |
+| LLM | Ollama (`llama3.2`) / Gemini (`gemini-3.7-flash`) |
 | Frontend | HTML, CSS, JavaScript |
 | Static Web Server | Nginx |
 | Testing | pytest |
 | Linting | Ruff |
 | Containerization | Docker & Docker Compose |
 | Persistence | JSON-based local storage |
+| Cloud Deployment | Render |
 
 ---
 
 ## High-Level Architecture
+
+### Local / Docker Architecture
+### Public Deployment Architecture
+
+```text
+┌─────────────────────────────┐
+│       User's Browser        │
+└──────────────┬──────────────┘
+               │
+               ▼
+┌─────────────────────────────┐
+│    Render Static Frontend   │
+│      HTML / CSS / JS        │
+└──────────────┬──────────────┘
+               │ HTTPS
+               ▼
+┌─────────────────────────────┐
+│    Render FastAPI Backend   │
+└──────────────┬──────────────┘
+               │
+       ┌───────┴─────────┐
+       │                 │
+       ▼                 ▼
+┌──────────────┐   ┌─────────────────┐
+│  VectorNest  │   │ Gemini Provider │
+│              │   │                 │
+│ Storage      │   │ Embeddings      │
+│ Filtering    │   │ Generation      │
+│ Brute Force  │   └─────────────────┘
+│ KD-Tree      │
+│ HNSW         │
+│ Metrics      │
+└──────────────┘
 
 ```text
                         ┌─────────────────────┐
