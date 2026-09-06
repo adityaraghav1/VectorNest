@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from vectornest.core.config import load_settings
+from vectornest.core.config import DEFAULT_PROJECT_ROOT, load_settings
 from vectornest.core.exceptions import ValidationError
 
 
@@ -45,6 +45,31 @@ def test_load_settings_uses_defaults(
         Path,
     )
 
+
+def test_relative_data_dir_resolves_from_project_root(monkeypatch):
+    monkeypatch.setenv(
+        "VECTORNEST_DATA_DIR",
+        "data/custom-vectornest",
+    )
+
+    settings = load_settings()
+
+    assert settings.data_dir == (
+        DEFAULT_PROJECT_ROOT / "data" / "custom-vectornest"
+    ).resolve()
+
+
+def test_absolute_data_dir_is_preserved(monkeypatch, tmp_path):
+    data_dir = tmp_path / "vectornest-data"
+
+    monkeypatch.setenv(
+        "VECTORNEST_DATA_DIR",
+        str(data_dir),
+    )
+
+    settings = load_settings()
+
+    assert settings.data_dir == data_dir.resolve()
 
 def test_load_settings_uses_environment_overrides(
     monkeypatch: pytest.MonkeyPatch,

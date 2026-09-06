@@ -44,12 +44,7 @@ def load_settings() -> Settings:
         default=768,
     )
 
-    data_dir = Path(
-        os.getenv(
-            "VECTORNEST_DATA_DIR",
-            str(DEFAULT_DATA_DIR),
-        )
-    ).expanduser()
+    data_dir = _read_data_dir()
 
     return Settings(
         ollama_host=ollama_host,
@@ -58,6 +53,22 @@ def load_settings() -> Settings:
         llm_model=llm_model,
         data_dir=data_dir,
     )
+
+
+def _read_data_dir() -> Path:
+    """Resolve the configured data directory."""
+
+    raw_value = os.getenv("VECTORNEST_DATA_DIR")
+
+    if raw_value is None:
+        return DEFAULT_DATA_DIR
+
+    data_dir = Path(raw_value).expanduser()
+
+    if not data_dir.is_absolute():
+        data_dir = DEFAULT_PROJECT_ROOT / data_dir
+
+    return data_dir.resolve()
 
 
 def _read_positive_int(
