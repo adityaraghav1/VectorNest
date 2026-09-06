@@ -13,6 +13,7 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "ollama",
+    "google-genai",
 ]
 
 [project.optional-dependencies]

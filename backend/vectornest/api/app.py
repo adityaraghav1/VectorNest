@@ -13,10 +13,14 @@ from vectornest.api.routes import (
     search_router,
     semantic_router,
 )
+from vectornest.core.config import load_settings
 
 
 def create_app() -> FastAPI:
     """Create and configure the VectorNest API application."""
+
+    settings = load_settings()
+
     application = FastAPI(
         title="VectorNest",
         description=(
@@ -28,10 +32,9 @@ def create_app() -> FastAPI:
 
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "http://127.0.0.1:5500",
-            "http://localhost:5500",
-        ],
+        allow_origins=list(
+            settings.cors_origins
+        ),
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -39,13 +42,27 @@ def create_app() -> FastAPI:
 
     register_exception_handlers(application)
 
-    application.include_router(health_router)
-    application.include_router(collections_router)
-    application.include_router(records_router)
-    application.include_router(search_router)
-    application.include_router(semantic_router)
-    application.include_router(projection_router)
-    application.include_router(rag_router)
+    application.include_router(
+        health_router
+    )
+    application.include_router(
+        collections_router
+    )
+    application.include_router(
+        records_router
+    )
+    application.include_router(
+        search_router
+    )
+    application.include_router(
+        semantic_router
+    )
+    application.include_router(
+        projection_router
+    )
+    application.include_router(
+        rag_router
+    )
 
     return application
 

@@ -4,11 +4,9 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any
 
-from vectornest.core.exceptions import (
-    ExternalServiceError,
-    ValidationError,
-)
+from vectornest.core.exceptions import ValidationError
 from vectornest.core.types import DistanceMetric, IndexType
+from vectornest.generation.base import GenerationProvider
 from vectornest.query.filters import MetadataFilter
 from vectornest.services.semantic_search import SemanticSearchService
 
@@ -37,20 +35,11 @@ class RAGService:
     def __init__(
         self,
         semantic_search_service: SemanticSearchService,
-        llm_client: Any,
-        model: str,
+        generation_provider: GenerationProvider,
         minimum_score: float = 0.45,
     ) -> None:
-        if not model.strip():
-            raise ValidationError(
-                "RAG model name cannot be empty."
-            )
-
-        self._semantic_search_service = (
-            semantic_search_service
-        )
-        self._llm_client = llm_client
-        self._model = model.strip()
+        self._semantic_search_service = semantic_search_service
+        self._generation_provider = generation_provider
         self._minimum_score = minimum_score
 
     def answer(
@@ -65,11 +54,7 @@ class RAGService:
     ) -> RAGResponse:
         """Generate a grounded answer from retrieved context."""
 
-        normalized_question = (
-            self._validate_question(
-                question
-            )
-        )
+        normalized_question = self._validate_question(question)
 
         sources = self._retrieve_sources(
             collection_name,
@@ -94,24 +79,7 @@ class RAGService:
             sources,
         )
 
-        try:
-            response = self._llm_client.chat(
-                model=self._model,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ],
-            )
-        except Exception as exc:
-            raise ExternalServiceError(
-                "Failed to generate answer using Ollama."
-            ) from exc
-
-        answer = self._extract_answer(
-            response
-        )
+        answer = self._generation_provider.generate(prompt)
 
         return RAGResponse(
             answer=answer,
@@ -131,13 +99,9 @@ class RAGService:
         list[RAGSource],
         Iterator[str],
     ]:
-        """Stream generated answer tokens from the LLM."""
+        """Stream generated answer chunks from the LLM."""
 
-        normalized_question = (
-            self._validate_question(
-                question
-            )
-        )
+        normalized_question = self._validate_question(question)
 
         sources = self._retrieve_sources(
             collection_name,
@@ -166,27 +130,9 @@ class RAGService:
             sources,
         )
 
-        try:
-            response = self._llm_client.chat(
-                model=self._model,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ],
-                stream=True,
-            )
-        except Exception as exc:
-            raise ExternalServiceError(
-                "Failed to stream answer using Ollama."
-            ) from exc
-
         return (
             sources,
-            self._iter_stream_content(
-                response
-            ),
+            self._generation_provider.stream(prompt),
         )
 
     def _retrieve_sources(
@@ -199,15 +145,13 @@ class RAGService:
         metadata_filter: MetadataFilter | None,
         index_type: IndexType,
     ) -> list[RAGSource]:
-        search_results = (
-            self._semantic_search_service.search(
-                collection_name,
-                question,
-                metric=metric,
-                k=k,
-                metadata_filter=metadata_filter,
-                index_type=index_type,
-            )
+        search_results = self._semantic_search_service.search(
+            collection_name,
+            question,
+            metric=metric,
+            k=k,
+            metadata_filter=metadata_filter,
+            index_type=index_type,
         )
 
         sources: list[RAGSource] = []
@@ -238,9 +182,7 @@ class RAGService:
         question: str,
         sources: list[RAGSource],
     ) -> str:
-        context = self._build_context(
-            sources
-        )
+        context = self._build_context(sources)
 
         return self._build_prompt(
             question=question,
@@ -251,17 +193,12 @@ class RAGService:
     def _validate_question(
         question: str,
     ) -> str:
-        if not isinstance(
-            question,
-            str,
-        ):
+        if not isinstance(question, str):
             raise ValidationError(
                 "RAG question must be a string."
             )
 
-        normalized_question = (
-            question.strip()
-        )
+        normalized_question = question.strip()
 
         if not normalized_question:
             raise ValidationError(
@@ -269,68 +206,6 @@ class RAGService:
             )
 
         return normalized_question
-
-    @staticmethod
-    def _iter_stream_content(
-        response: Any,
-    ) -> Iterator[str]:
-        """Yield text chunks from an Ollama stream."""
-
-        for chunk in response:
-            content = (
-                RAGService._extract_stream_chunk(
-                    chunk
-                )
-            )
-
-            if content:
-                yield content
-
-    @staticmethod
-    def _extract_stream_chunk(
-        chunk: Any,
-    ) -> str:
-        if isinstance(
-            chunk,
-            dict,
-        ):
-            message = chunk.get(
-                "message"
-            )
-
-            if isinstance(
-                message,
-                dict,
-            ):
-                content = message.get(
-                    "content"
-                )
-
-                if isinstance(
-                    content,
-                    str,
-                ):
-                    return content
-
-        message = getattr(
-            chunk,
-            "message",
-            None,
-        )
-
-        content = getattr(
-            message,
-            "content",
-            None,
-        )
-
-        if isinstance(
-            content,
-            str,
-        ):
-            return content
-
-        return ""
 
     @staticmethod
     def _build_context(
@@ -348,9 +223,7 @@ class RAGService:
                 f"{source.document}"
             )
 
-        return "\n\n".join(
-            context_parts
-        )
+        return "\n\n".join(context_parts)
 
     @staticmethod
     def _build_prompt(
@@ -368,61 +241,4 @@ class RAGService:
             f"Context:\n{context}\n\n"
             f"Question:\n{question}\n\n"
             "Answer:"
-        )
-
-    @staticmethod
-    def _extract_answer(
-        response: Any,
-    ) -> str:
-        if isinstance(
-            response,
-            dict,
-        ):
-            message = response.get(
-                "message"
-            )
-
-            if isinstance(
-                message,
-                dict,
-            ):
-                content = message.get(
-                    "content"
-                )
-
-                if isinstance(
-                    content,
-                    str,
-                ):
-                    answer = (
-                        content.strip()
-                    )
-
-                    if answer:
-                        return answer
-
-        message = getattr(
-            response,
-            "message",
-            None,
-        )
-
-        content = getattr(
-            message,
-            "content",
-            None,
-        )
-
-        if isinstance(
-            content,
-            str,
-        ):
-            answer = content.strip()
-
-            if answer:
-                return answer
-
-        raise ExternalServiceError(
-            "Ollama response does not contain "
-            "a generated answer."
         )

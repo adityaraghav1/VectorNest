@@ -2,39 +2,47 @@ from pathlib import Path
 
 import pytest
 
-from vectornest.core.config import DEFAULT_PROJECT_ROOT, load_settings
+from vectornest.core.config import (
+    DEFAULT_PROJECT_ROOT,
+    load_settings,
+)
 from vectornest.core.exceptions import ValidationError
 
 
-def test_load_settings_uses_defaults(
+def clear_ai_environment(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.delenv(
+    """Remove AI-related environment variables."""
+
+    variables = [
+        "VECTORNEST_AI_PROVIDER",
         "VECTORNEST_OLLAMA_HOST",
-        raising=False,
-    )
-    monkeypatch.delenv(
         "VECTORNEST_EMBEDDING_MODEL",
-        raising=False,
-    )
-    monkeypatch.delenv(
         "VECTORNEST_EMBEDDING_DIMENSION",
-        raising=False,
-    )
-    monkeypatch.delenv(
         "VECTORNEST_LLM_MODEL",
-        raising=False,
-    )
-    monkeypatch.delenv(
         "VECTORNEST_DATA_DIR",
-        raising=False,
-    )
+        "GEMINI_API_KEY",
+    ]
+
+    for variable in variables:
+        monkeypatch.delenv(
+            variable,
+            raising=False,
+        )
+
+
+def test_load_settings_uses_ollama_defaults(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clear_ai_environment(monkeypatch)
 
     settings = load_settings()
 
+    assert settings.ai_provider == "ollama"
     assert settings.ollama_host == (
         "http://127.0.0.1:11434"
     )
+    assert settings.gemini_api_key is None
     assert settings.embedding_model == (
         "nomic-embed-text"
     )
@@ -46,7 +54,116 @@ def test_load_settings_uses_defaults(
     )
 
 
-def test_relative_data_dir_resolves_from_project_root(monkeypatch):
+def test_load_settings_uses_gemini_defaults(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clear_ai_environment(monkeypatch)
+
+    monkeypatch.setenv(
+        "VECTORNEST_AI_PROVIDER",
+        "gemini",
+    )
+    monkeypatch.setenv(
+        "GEMINI_API_KEY",
+        "test-api-key",
+    )
+
+    settings = load_settings()
+
+    assert settings.ai_provider == "gemini"
+    assert settings.gemini_api_key == (
+        "test-api-key"
+    )
+    assert settings.embedding_model == (
+        "gemini-embedding-2"
+    )
+    assert settings.embedding_dimension == 768
+    assert settings.llm_model == (
+        "gemini-3.7-flash"
+    )
+
+
+def test_gemini_requires_api_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clear_ai_environment(monkeypatch)
+
+    monkeypatch.setenv(
+        "VECTORNEST_AI_PROVIDER",
+        "gemini",
+    )
+
+    with pytest.raises(
+        ValidationError,
+        match=(
+            "GEMINI_API_KEY is required when "
+            "VECTORNEST_AI_PROVIDER=gemini"
+        ),
+    ):
+        load_settings()
+
+
+def test_gemini_rejects_blank_api_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clear_ai_environment(monkeypatch)
+
+    monkeypatch.setenv(
+        "VECTORNEST_AI_PROVIDER",
+        "gemini",
+    )
+    monkeypatch.setenv(
+        "GEMINI_API_KEY",
+        "   ",
+    )
+
+    with pytest.raises(
+        ValidationError,
+        match="GEMINI_API_KEY is required",
+    ):
+        load_settings()
+
+
+def test_invalid_ai_provider_is_rejected(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clear_ai_environment(monkeypatch)
+
+    monkeypatch.setenv(
+        "VECTORNEST_AI_PROVIDER",
+        "openai",
+    )
+
+    with pytest.raises(
+        ValidationError,
+        match=(
+            "VECTORNEST_AI_PROVIDER must be either "
+            "'ollama' or 'gemini'"
+        ),
+    ):
+        load_settings()
+
+
+def test_ai_provider_is_normalized(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clear_ai_environment(monkeypatch)
+
+    monkeypatch.setenv(
+        "VECTORNEST_AI_PROVIDER",
+        "  OLLAMA  ",
+    )
+
+    settings = load_settings()
+
+    assert settings.ai_provider == "ollama"
+
+
+def test_relative_data_dir_resolves_from_project_root(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clear_ai_environment(monkeypatch)
+
     monkeypatch.setenv(
         "VECTORNEST_DATA_DIR",
         "data/custom-vectornest",
@@ -55,11 +172,18 @@ def test_relative_data_dir_resolves_from_project_root(monkeypatch):
     settings = load_settings()
 
     assert settings.data_dir == (
-        DEFAULT_PROJECT_ROOT / "data" / "custom-vectornest"
+        DEFAULT_PROJECT_ROOT
+        / "data"
+        / "custom-vectornest"
     ).resolve()
 
 
-def test_absolute_data_dir_is_preserved(monkeypatch, tmp_path):
+def test_absolute_data_dir_is_preserved(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    clear_ai_environment(monkeypatch)
+
     data_dir = tmp_path / "vectornest-data"
 
     monkeypatch.setenv(
@@ -69,12 +193,21 @@ def test_absolute_data_dir_is_preserved(monkeypatch, tmp_path):
 
     settings = load_settings()
 
-    assert settings.data_dir == data_dir.resolve()
+    assert settings.data_dir == (
+        data_dir.resolve()
+    )
+
 
 def test_load_settings_uses_environment_overrides(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
+    clear_ai_environment(monkeypatch)
+
+    monkeypatch.setenv(
+        "VECTORNEST_AI_PROVIDER",
+        "ollama",
+    )
     monkeypatch.setenv(
         "VECTORNEST_OLLAMA_HOST",
         "http://ollama:11434",
@@ -98,6 +231,7 @@ def test_load_settings_uses_environment_overrides(
 
     settings = load_settings()
 
+    assert settings.ai_provider == "ollama"
     assert settings.ollama_host == (
         "http://ollama:11434"
     )
@@ -106,7 +240,9 @@ def test_load_settings_uses_environment_overrides(
     )
     assert settings.embedding_dimension == 1024
     assert settings.llm_model == "custom-llm"
-    assert settings.data_dir == tmp_path
+    assert settings.data_dir == (
+        tmp_path.resolve()
+    )
 
 
 @pytest.mark.parametrize(
@@ -121,6 +257,8 @@ def test_embedding_dimension_must_be_positive_integer(
     monkeypatch: pytest.MonkeyPatch,
     value: str,
 ) -> None:
+    clear_ai_environment(monkeypatch)
+
     monkeypatch.setenv(
         "VECTORNEST_EMBEDDING_DIMENSION",
         value,

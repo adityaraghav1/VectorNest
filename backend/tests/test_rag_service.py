@@ -1,9 +1,12 @@
+from collections.abc import Iterator
+
 import numpy as np
 import pytest
 
 from vectornest.core.exceptions import ExternalServiceError
 from vectornest.core.types import DistanceMetric
 from vectornest.embeddings.base import EmbeddingProvider
+from vectornest.generation.base import GenerationProvider
 from vectornest.models.collection import CollectionConfig
 from vectornest.models.record import VectorRecord
 from vectornest.services.rag import RAGService
@@ -28,53 +31,46 @@ class FakeEmbeddingProvider(EmbeddingProvider):
         )
 
 
-class FakeLLMClient:
-    def chat(
+class FakeGenerationProvider(GenerationProvider):
+    def generate(
         self,
-        *,
-        model: str,
-        messages: list[dict[str, str]],
-        stream: bool = False,
-    ):
-        if stream:
-            return iter(
-                [
-                    {
-                        "message": {
-                            "content": "Python "
-                        }
-                    },
-                    {
-                        "message": {
-                            "content": (
-                                "is commonly used "
-                                "for machine learning."
-                            )
-                        }
-                    },
-                ]
-            )
+        prompt: str,
+    ) -> str:
+        return (
+            "Python is commonly used "
+            "for machine learning."
+        )
 
-        return {
-            "message": {
-                "content": (
-                    "Python is commonly used "
+    def stream(
+        self,
+        prompt: str,
+    ) -> Iterator[str]:
+        return iter(
+            [
+                "Python ",
+                (
+                    "is commonly used "
                     "for machine learning."
-                )
-            }
-        }
+                ),
+            ]
+        )
 
 
-class FailingLLMClient:
-    def chat(
+class FailingGenerationProvider(GenerationProvider):
+    def generate(
         self,
-        *,
-        model: str,
-        messages: list[dict[str, str]],
-        stream: bool = False,
-    ):
-        raise ConnectionError(
-            "Ollama is unavailable."
+        prompt: str,
+    ) -> str:
+        raise ExternalServiceError(
+            "Generation provider failed."
+        )
+
+    def stream(
+        self,
+        prompt: str,
+    ) -> Iterator[str]:
+        raise ExternalServiceError(
+            "Generation provider stream failed."
         )
 
 
@@ -110,24 +106,23 @@ def make_storage(
 def make_rag_service(
     storage: InMemoryStorage,
     *,
-    llm_client=None,
+    generation_provider: GenerationProvider | None = None,
     minimum_score: float = 0.45,
 ) -> RAGService:
-    provider = FakeEmbeddingProvider()
+    embedding_provider = FakeEmbeddingProvider()
 
     semantic_service = SemanticSearchService(
         storage,
-        provider,
+        embedding_provider,
     )
 
     return RAGService(
         semantic_search_service=semantic_service,
-        llm_client=(
-            llm_client
-            if llm_client is not None
-            else FakeLLMClient()
+        generation_provider=(
+            generation_provider
+            if generation_provider is not None
+            else FakeGenerationProvider()
         ),
-        model="fake-model",
         minimum_score=minimum_score,
     )
 
@@ -173,9 +168,7 @@ def test_rag_returns_answer_and_sources() -> None:
         ),
     )
 
-    rag_service = make_rag_service(
-        storage
-    )
+    rag_service = make_rag_service(storage)
 
     result = rag_service.answer(
         "knowledge",
@@ -184,20 +177,14 @@ def test_rag_returns_answer_and_sources() -> None:
         k=2,
     )
 
-    assert (
-        result.answer
-        == (
-            "Python is commonly used "
-            "for machine learning."
-        )
+    assert result.answer == (
+        "Python is commonly used "
+        "for machine learning."
     )
 
     assert len(result.sources) == 1
 
-    assert (
-        result.sources[0].id
-        == "python:chunk:0"
-    )
+    assert result.sources[0].id == "python:chunk:0"
 
     assert all(
         source.id != "unrelated:chunk:0"
@@ -219,9 +206,7 @@ def test_rag_filters_low_cosine_similarity() -> None:
         ),
     )
 
-    rag_service = make_rag_service(
-        storage
-    )
+    rag_service = make_rag_service(storage)
 
     result = rag_service.answer(
         "knowledge",
@@ -252,9 +237,7 @@ def test_rag_does_not_apply_cosine_threshold_to_euclidean() -> None:
         ),
     )
 
-    rag_service = make_rag_service(
-        storage
-    )
+    rag_service = make_rag_service(storage)
 
     result = rag_service.answer(
         "knowledge",
@@ -265,15 +248,12 @@ def test_rag_does_not_apply_cosine_threshold_to_euclidean() -> None:
 
     assert len(result.sources) == 1
 
-    assert (
-        result.sources[0].id
-        == "distance:chunk:0"
-    )
+    assert result.sources[0].id == "distance:chunk:0"
 
     assert result.sources[0].score == 0.0
 
 
-def test_rag_wraps_generation_failure_as_external_service_error() -> None:
+def test_rag_propagates_generation_provider_failure() -> None:
     storage = make_storage(
         metric=DistanceMetric.COSINE,
         record_id="python:chunk:0",
@@ -289,12 +269,12 @@ def test_rag_wraps_generation_failure_as_external_service_error() -> None:
 
     rag_service = make_rag_service(
         storage,
-        llm_client=FailingLLMClient(),
+        generation_provider=FailingGenerationProvider(),
     )
 
     with pytest.raises(
         ExternalServiceError,
-        match="Failed to generate answer using Ollama",
+        match="Generation provider failed.",
     ):
         rag_service.answer(
             "knowledge",
@@ -304,7 +284,7 @@ def test_rag_wraps_generation_failure_as_external_service_error() -> None:
         )
 
 
-def test_rag_wraps_stream_start_failure_as_external_service_error() -> None:
+def test_rag_propagates_stream_provider_failure() -> None:
     storage = make_storage(
         metric=DistanceMetric.COSINE,
         record_id="python:chunk:0",
@@ -320,12 +300,12 @@ def test_rag_wraps_stream_start_failure_as_external_service_error() -> None:
 
     rag_service = make_rag_service(
         storage,
-        llm_client=FailingLLMClient(),
+        generation_provider=FailingGenerationProvider(),
     )
 
     with pytest.raises(
         ExternalServiceError,
-        match="Failed to stream answer using Ollama",
+        match="Generation provider stream failed.",
     ):
         rag_service.stream_answer(
             "knowledge",
