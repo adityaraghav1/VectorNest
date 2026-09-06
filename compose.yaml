@@ -1,0 +1,26 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: vectornest-backend
+    ports:
+      - "8000:8000"
+    environment:
+      VECTORNEST_OLLAMA_HOST: http://host.docker.internal:11434
+      VECTORNEST_EMBEDDING_MODEL: nomic-embed-text
+      VECTORNEST_EMBEDDING_DIMENSION: "768"
+      VECTORNEST_LLM_MODEL: llama3.2
+      VECTORNEST_DATA_DIR: /app/data/vectornest
+    volumes:
+      - ./data/vectornest:/app/data/vectornest
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: vectornest-frontend
+    ports:
+      - "5500:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
