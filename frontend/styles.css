@@ -934,6 +934,397 @@ button {
     color: white;
 }
 
+/* =========================================================
+   VectorNest Mobile Responsive Layout
+   ========================================================= */
+
+@media (max-width: 1000px) {
+    html,
+    body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .app-shell {
+        display: block;
+        width: 100%;
+    }
+
+    /* Keep navigation available on tablets/mobile */
+    .sidebar {
+        display: flex;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+
+        width: 100%;
+        min-height: auto;
+
+        padding: 14px 16px;
+
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+
+        background: rgba(13, 17, 27, 0.97);
+
+        backdrop-filter: blur(14px);
+    }
+
+    .brand {
+        margin-bottom: 12px;
+    }
+
+    .brand-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+    }
+
+    .brand h1 {
+        font-size: 16px;
+    }
+
+    .brand p {
+        display: none;
+    }
+
+    /* Mobile navigation becomes horizontally scrollable */
+    .nav-menu {
+        width: 100%;
+
+        display: flex;
+        flex-direction: row;
+
+        gap: 8px;
+
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        padding-bottom: 2px;
+
+        scrollbar-width: none;
+    }
+
+    .nav-menu::-webkit-scrollbar {
+        display: none;
+    }
+
+    .nav-item {
+        flex: 0 0 auto;
+
+        white-space: nowrap;
+
+        padding: 10px 13px;
+
+        font-size: 13px;
+
+        text-align: center;
+    }
+
+    .sidebar-footer {
+        display: none;
+    }
+
+    .main-content {
+        width: 100%;
+        max-width: 100%;
+
+        padding: 18px 16px 36px;
+    }
+
+    .topbar {
+        margin-bottom: 22px;
+
+        gap: 12px;
+
+        flex-wrap: wrap;
+    }
+
+    .topbar h2 {
+        font-size: 24px;
+    }
+
+    .panel {
+        width: 100%;
+        max-width: 100%;
+
+        padding: 22px;
+
+        border-radius: 16px;
+    }
+
+    .hero-card {
+        grid-template-columns: 1fr;
+
+        min-height: auto;
+
+        padding: 28px 24px;
+
+        border-radius: 20px;
+
+        gap: 20px;
+    }
+
+    .hero-card h3 {
+        font-size: clamp(28px, 8vw, 42px);
+    }
+
+    .hero-copy {
+        margin-top: 16px;
+
+        font-size: 14px;
+
+        line-height: 1.6;
+    }
+
+    .vector-hero-visual {
+        width: min(280px, 100%);
+        height: 280px;
+
+        margin: 0 auto;
+    }
+
+    .section-heading h3 {
+        font-size: 24px;
+    }
+
+    .form-grid,
+    .stats-grid,
+    .ingestion-layout,
+    .search-layout,
+    .rag-layout {
+        grid-template-columns: 1fr;
+    }
+
+    input,
+    textarea,
+    select {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .plot-container {
+        width: 100%;
+        height: 340px;
+    }
+
+    #vector-space-canvas {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .visualization-header {
+        flex-direction: column;
+    }
+
+    .visualization-actions {
+        width: 100%;
+
+        flex-wrap: wrap;
+
+        justify-content: space-between;
+    }
+
+    .pipeline-card {
+        margin-left: 0;
+    }
+}
+
+
+@media (max-width: 650px) {
+    .main-content {
+        padding: 14px 12px 32px;
+    }
+
+    .sidebar {
+        padding: 12px;
+    }
+
+    .brand {
+        gap: 9px;
+    }
+
+    .brand-icon {
+        width: 34px;
+        height: 34px;
+    }
+
+    .nav-item {
+        padding: 9px 11px;
+
+        font-size: 12px;
+    }
+
+    .topbar {
+        align-items: flex-start;
+
+        margin-bottom: 18px;
+    }
+
+    .topbar h2 {
+        font-size: 21px;
+    }
+
+    .api-status {
+        font-size: 11px;
+    }
+
+    .hero-card {
+        padding: 22px 18px;
+    }
+
+    .hero-card h3 {
+        font-size: 30px;
+
+        line-height: 1.1;
+    }
+
+    .vector-hero-visual {
+        width: min(250px, 100%);
+        height: 255px;
+    }
+
+    .panel {
+        padding: 18px;
+    }
+
+    .panel h3 {
+        font-size: 20px;
+    }
+
+    .panel-description {
+        margin-bottom: 20px;
+
+        font-size: 13px;
+
+        line-height: 1.55;
+    }
+
+    .form-field textarea {
+        min-height: 190px;
+    }
+
+    .primary-button,
+    .secondary-button {
+        min-height: 44px;
+    }
+
+    .stats-grid {
+        gap: 12px;
+    }
+
+    .stat-card {
+        padding: 18px;
+    }
+
+    .stat-card strong {
+        font-size: 25px;
+    }
+
+    .plot-container {
+        height: 290px;
+
+        border-radius: 12px;
+    }
+
+    .plot-legend {
+        gap: 12px;
+
+        flex-wrap: wrap;
+    }
+
+    .search-result-card {
+        padding: 15px;
+    }
+
+    .search-document {
+        font-size: 13px;
+    }
+
+    .rag-panel {
+        padding: 18px;
+    }
+
+    .rag-header h3 {
+        font-size: 20px;
+    }
+
+    .rag-messages {
+        min-height: 320px;
+        max-height: 430px;
+
+        padding: 13px;
+    }
+
+    .rag-message-content,
+    .rag-message.assistant-message .rag-message-content,
+    .rag-message.user-message .rag-message-content {
+        max-width: 84%;
+
+        padding: 11px 12px;
+
+        font-size: 12px;
+    }
+
+    #rag-form {
+        padding: 12px;
+    }
+
+    #rag-question {
+        min-height: 70px;
+    }
+
+    .rag-controls {
+        padding: 16px;
+    }
+
+    .rag-source-card {
+        padding: 13px;
+    }
+}
+
+
+@media (max-width: 420px) {
+    .main-content {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .panel {
+        padding: 15px;
+    }
+
+    .hero-card {
+        padding: 20px 15px;
+    }
+
+    .hero-card h3 {
+        font-size: 27px;
+    }
+
+    .vector-hero-visual {
+        width: min(225px, 100%);
+        height: 230px;
+    }
+
+    .plot-container {
+        height: 250px;
+    }
+
+    .visualization-actions {
+        align-items: flex-start;
+
+        flex-direction: column;
+    }
+
+    .rag-message-content,
+    .rag-message.assistant-message .rag-message-content,
+    .rag-message.user-message .rag-message-content {
+        max-width: 88%;
+    }
+}
+
 .metadata-row {
     display: grid;
 
@@ -1598,13 +1989,55 @@ button {
     background: rgba(255, 255, 255, 0.015);
 }
 
+
+@media (max-width: 650px) {
+    .vector-hero-visual {
+        width: 220px;
+        height: 220px;
+        margin: 0 auto;
+    }
+}
+
 @media (max-width: 1000px) {
     .app-shell {
         grid-template-columns: 1fr;
     }
 
     .sidebar {
+        display: flex !important;
+        flex-direction: column;
+
+        position: sticky;
+        top: 0;
+        z-index: 100;
+
+        width: 100%;
+        min-height: auto;
+
+        padding: 12px 16px;
+
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+
+        background: rgba(13,17,27,.97);
+        backdrop-filter: blur(12px);
+    }
+
+    .nav-menu {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .nav-menu::-webkit-scrollbar {
         display: none;
+    }
+
+    .nav-item {
+        flex: 0 0 auto;
+        white-space: nowrap;
     }
 
     .main-content {
